@@ -1,0 +1,2 @@
+import {createHash,timingSafeEqual} from 'node:crypto';
+export function authorized(request:Request){const password=process.env.APP_PASSWORD;if(!password)return process.env.NODE_ENV!=='production'&&!process.env.VERCEL;const expected=createHash('sha256').update('cheonan:'+password).digest('hex');const token=(request.headers.get('cookie')||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('cheonan_auth='))?.slice('cheonan_auth='.length)||'';if(token.length!==expected.length)return false;return timingSafeEqual(Buffer.from(token),Buffer.from(expected))}

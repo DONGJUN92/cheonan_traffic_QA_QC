@@ -1,5 +1,6 @@
 import {collectOfficial} from '../../../lib/collector';
 import {storage} from '../../../lib/storage';
+import {authorized} from '../../../lib/auth';
 import {initialState,replayRun,processRows,replayData,modelData,assess,modelForState,getSeries,buildContact,addAudit,dayAdd,kstDate,STATUS,type OpsState,type RecordRow} from '../../../lib/engine';
 export const dynamic='force-dynamic';
 export const runtime='nodejs';
@@ -10,8 +11,9 @@ async function load(key:string){let row=await db.read(key);if(!row){const [mode,
 async function save(key:string,s:OpsState,revision:number){await db.save(key,s,revision)}
 function keyOf(mode:string,scenario:string){if(!['replay','live'].includes(mode))throw new Error('잘못된 모드입니다.');if(mode==='replay'&&!replayData.scenarios.some((s:any)=>s.id===scenario))throw new Error('사례를 찾을 수 없습니다.');return mode+':'+(mode==='live'?'live':scenario)}
 function view(s:OpsState){return {...s,analysis:assess(s.latestRows,s.date,modelForState(s)),scenarios:replayData.scenarios,model:{algorithm:modelData[modelForState(s)].algorithm,trainedThrough:modelData[modelForState(s)].trainedThrough,trainingRows:modelData[modelForState(s)].trainingRows},source:{url:replayData.sourceUrl,retrievedAt:replayData.retrievedAt},schedule:{time:'08:00',timezone:'Asia/Seoul',target:'전날 완결 데이터',status:'Vercel 08시 예약 · 요금제에 따른 실행 시각 오차 가능',lastRun:s.runs[0]||null},meta:replayData.meta}}
-export async function GET(request:Request){try{const u=new URL(request.url);if(u.searchParams.has('help'))return json({source:replayData.sourceUrl,update:{method:'POST',body:{action:'collect',mode:'live',scenario:'live'},scope:'owner-private shared workspace',time:'매일08:00 Asia/Seoul',target:'전날부터 누락 완결일을7일 범위 내 재조회',retry:'1회 실패는 기존 상태 유지. 저장결과GET으로 확인. 발송 기능은 시연만 가능.'},readback:'/api/ops?mode=live&scenario=live'});const mode=u.searchParams.get('mode')||'replay',scenario=u.searchParams.get('scenario')||'printing';const {state}=await load(keyOf(mode,scenario));if(u.searchParams.get('series'))return json({series:getSeries(state,u.searchParams.get('series')!)});return json(view(state))}catch(e){return json({error:e instanceof Error?e.message:'업무 목록을 불러오지 못했습니다.'},503)}}
+export async function GET(request:Request){if(!authorized(request))return json({error:"로그인이 필요합니다."},401);try{const u=new URL(request.url);if(u.searchParams.has('help'))return json({source:replayData.sourceUrl,update:{method:'POST',body:{action:'collect',mode:'live',scenario:'live'},scope:'owner-private shared workspace',time:'매일08:00 Asia/Seoul',target:'전날부터 누락 완결일을7일 범위 내 재조회',retry:'1회 실패는 기존 상태 유지. 저장결과GET으로 확인. 발송 기능은 시연만 가능.'},readback:'/api/ops?mode=live&scenario=live'});const mode=u.searchParams.get('mode')||'replay',scenario=u.searchParams.get('scenario')||'printing';const {state}=await load(keyOf(mode,scenario));if(u.searchParams.get('series'))return json({series:getSeries(state,u.searchParams.get('series')!)});return json(view(state))}catch(e){return json({error:e instanceof Error?e.message:'업무 목록을 불러오지 못했습니다.'},503)}}
 export async function POST(request:Request){
+ if(!authorized(request))return json({error:"로그인이 필요합니다."},401);
  let key='',loaded:any;
  try{
   const origin=request.headers.get('Origin');if(origin&&origin!==new URL(request.url).origin)return json({error:'이 화면에서 요청을 다시 실행하세요.'},403);
