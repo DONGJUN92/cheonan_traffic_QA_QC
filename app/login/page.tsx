@@ -1,0 +1,3 @@
+'use client';
+import {useState} from 'react';
+export default function Login(){const[p,setP]=useState(''),[e,setE]=useState('');return <div style={{maxWidth:420,margin:'15vh auto',padding:30,background:'white',borderRadius:12}}><h1 style={{fontSize:25}}>교통량 점검 지원</h1><p style={{margin:'15px 0'}}>비공개 업무 시연 접속</p><form onSubmit={async ev=>{ev.preventDefault();const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:p})});if(r.ok)location.href='/';else setE('접속 암호를 확인하세요.')}}><label>접속 암호<input type="password" value={p} onChange={ev=>setP(ev.target.value)} required/></label><button className="btn primary" type="submit">웹앱 열기</button>{e&&<p role="alert" style={{marginTop:15}}>{e}</p>}</form></div>}
