@@ -21,15 +21,15 @@ cp .env.example .env.local
 npm run dev
 ```
 
-`.env.local`의 DATABASE_URL에 Neon/Postgres 연결값을 설정합니다. 처음 연결할 때 `ops_workspace` 테이블을 생성합니다. localhost:5174에서 실행되며 개발환경은 APP_PASSWORD를 설정하지 않으면 로그인 없이 열립니다. 운영환경에는 APP_PASSWORD가 필수입니다.
+`.env.local`의 DATABASE_URL에 Neon/Postgres 연결값을 설정합니다. 처음 연결할 때 `ops_workspace` 테이블을 생성합니다. localhost:5174에서 실행되며 개발·운영환경 모두 접속 암호 없이 첫 화면이 열립니다.
 
 ## Vercel 배포
 
 1. 이 저장소를 Vercel 프로젝트에 연결합니다. 루트 디렉토리 `.`과 Next.js 프레임워크를 사용합니다.
 2. Neon/Postgres를 연결해 DATABASE_URL 또는 POSTGRES_URL을 공급합니다.
-3. APP_PASSWORD(비공개 업무 시연용 암호), CRON_SECRET(정기 수집 전용 무작위값)을 운영 환경변수에 설정합니다. 비밀값을 저장소에 커밋하지 않습니다.
+3. CRON_SECRET(정기 수집 전용 무작위값)을 운영 환경변수에 설정합니다. 비밀값을 저장소에 커밋하지 않습니다.
 4. 빌드 명령은 `npm run build`, 설치 명령은 `npm ci`입니다.
-5. 배포 후 로그인, 사례재생, 설정저장, 담당배정, 연락시연, 새로고침후저장유지, 정기 수집을 확인합니다.
+5. 배포 후 암호 없는 첫 화면 접속, 사례재생, 설정저장, 담당배정, 연락시연, 새로고침후저장유지, 정기 수집을 확인합니다.
 
 `vercel.json`의 `0 23 * * *`는 UTC23시, 즉 다음날 한국시간08시입니다. `/api/cron`은 CRON_SECRET으로 인증된 요청만 처리합니다. Vercel Hobby에서는08:00~08:59사이에 실행될수있으며 정확한08:00분 실행을보장하지않습니다. Pro 이상의분단위일정은계정요금제에따라달라집니다. 참조: https://vercel.com/docs/cron-jobs/usage-and-pricing
 
@@ -45,6 +45,6 @@ cityhall학습마감2024-11-20,printing2026-08-04,live2026-08-17. 모델각160�
 
 ## 보안·저장
 
-운영환경APP_PASSWORD로그인과HttpOnly쿠키로업무화면·API를보호합니다. 정기수집에는별도CRON_SECRET이필요합니다. 기관의직원권한·정비업체권한체계를대체하는인증이아니며비공개시연접속용입니다. 연락처와업무이력은Postgres에저장하고로그인없는외부요청을거부합니다.
+발표용 공개 시연으로 화면과 업무 API에 암호 없이 접속합니다. 기존 /login 주소는 첫 화면으로 이동합니다. 담당·연락처·업무이력은 Postgres의 공유 시연 공간에 저장됩니다. 업무 변경 API의 동일 출처 검증과 /api/cron의 CRON_SECRET 인증은 유지합니다.
 
 원본제출문서·개인정보동의서·서약서·기관수리기록·인증키·로컬사용자DB는이저장소에포함하지않습니다. 학습모델과공개사례재생용통계만포함합니다.
